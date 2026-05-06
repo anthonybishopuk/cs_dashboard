@@ -1,0 +1,7 @@
+data/
+*.db
+*.csv
+*.sqlite
+.venv/
+__pycache__/
+*.pyc
