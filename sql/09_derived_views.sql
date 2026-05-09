@@ -39,8 +39,10 @@ CREATE VIEW at_risk_next_actions AS
 SELECT
 	ls.company_name,
 	ls.team_id,
+    ls.region,
 	ls.salesperson,
 	ohs.overall_health_score,
+    ohs.health_band,
 	hnm.health_narrative,
 	arw.risk_flag,
 	arw.contract_status,
@@ -48,6 +50,7 @@ SELECT
 	arw.user_trend,
 	et.engagement_delta,
 	ls.company_size,
+    ls.monthly_fee,
 	CASE
 		WHEN ohs.overall_health_score < 40
 			THEN 'Urgent outreach – disengaging'

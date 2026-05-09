@@ -33,7 +33,7 @@ def load_companies():
 
 
 def load_monthly_usage(team_id):
-    query = """
+    usage_query = """
         SELECT
             snapshot_month,
             total_clicks_wo_api,
@@ -44,8 +44,19 @@ def load_monthly_usage(team_id):
         WHERE team_id = ?
         ORDER BY snapshot_month
     """
+    health_query = """
+        SELECT
+            snapshot_month,
+            overall_health_score
+        FROM health_score_monthly_enriched
+        WHERE team_id = ?
+        ORDER BY snapshot_month
+    """
     with get_connection() as conn:
-        return pd.read_sql(query, conn, params=(team_id,))
+        usage_df = pd.read_sql(usage_query, conn, params=(team_id,))
+        health_df = pd.read_sql(health_query, conn, params=(team_id,))
+
+    return usage_df.merge(health_df, on="snapshot_month", how="left")
 
 
 def load_risk_flag(team_id):
@@ -70,9 +81,34 @@ def load_at_risk_clients():
             overall_health_score,
             health_narrative,
             company_size,
+            monthly_fee,
             salesperson
         FROM at_risk_next_actions
         WHERE overall_health_score <= 40
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn)
+
+
+def load_clients_to_review():
+    query = """
+        SELECT
+            company_name,
+            team_id,
+            region,
+            salesperson,
+            overall_health_score,
+            health_band,
+            health_narrative,
+            risk_flag,
+            contract_status,
+            days_to_contract_end
+            user_trend,
+            engagement_delta,
+            company_size,
+            monthly_fee,
+            recommended_action
+        FROM at_risk_next_actions
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)
