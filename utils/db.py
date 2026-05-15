@@ -102,7 +102,7 @@ def load_clients_to_review():
             health_narrative,
             risk_flag,
             contract_status,
-            days_to_contract_end
+            days_to_contract_end,
             user_trend,
             engagement_delta,
             company_size,
