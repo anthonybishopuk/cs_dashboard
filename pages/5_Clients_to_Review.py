@@ -3,6 +3,7 @@ import plotly.express as px
 import pandas as pd
 from utils.db import load_clients_to_review, load_monthly_usage
 from utils.data_prep import prepare_time_series
+from utils.display import colour_health_band
 
 st.set_page_config(layout="wide")
 st.title("Clients to Review")
@@ -183,6 +184,14 @@ if not filtered_df.empty:
         )
         st.plotly_chart(fig, width="stretch") 
 
+    display_cols = [
+    "company_name", "salesperson", "company_size", "region",
+    "monthly_fee", "overall_health_score", "health_band",
+    "recommended_action", "contract_status", "days_to_contract_end"
+    ]
+    table_df = filtered_df[display_cols].sort_values("overall_health_score")
+    styled_table = table_df.style.apply(colour_health_band, axis=1)
+    st.dataframe(styled_table, use_container_width=True)
 
 else:
     st.info("No clients match the current filters.")
