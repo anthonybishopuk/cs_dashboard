@@ -28,7 +28,8 @@ WITH base_metrics AS (
 		epm.engagement_penalty,
 		ump.user_penalty,
 		usdp.sharp_decline_penalty,
-		pem.fee_per_user
+		pem.fee_per_user,
+        jppm.jobs_posted_penalty
 	FROM clients_clean cc
 	LEFT JOIN engagement_penalty_monthly epm
 		ON cc.team_id = epm.team_id
@@ -50,9 +51,9 @@ WITH base_metrics AS (
 SELECT
 	*,
 	CASE
-		WHEN overall_health_score >= 80 THEN 'Healthy'
-		WHEN overall_health_score >= 60 THEN 'Watch'
-		WHEN overall_health_score >= 40 THEN 'At Risk'
+		WHEN overall_health_score >= 95 THEN 'Healthy'
+		WHEN overall_health_score >= 80 THEN 'Watch'
+		WHEN overall_health_score >= 60 THEN 'At Risk'
 		ELSE 'Critical'
 	END AS health_band
 FROM base_metrics;
