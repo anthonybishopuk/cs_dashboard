@@ -140,6 +140,7 @@ if not filtered_df.empty:
                 "total_clicks_wo_api": "Clicks"
             }
         )
+        fig.update_yaxes(rangemode="tozero")
         st.plotly_chart(fig, width="stretch")
 
     with chart_col2:
@@ -153,6 +154,7 @@ if not filtered_df.empty:
                 "jobs_posted": "Jobs"
             }
         )
+        fig.update_yaxes(rangemode="tozero")
         st.plotly_chart(fig, width="stretch")
 
 
@@ -169,6 +171,7 @@ if not filtered_df.empty:
                 "active_users": "Users"
             }
         )
+        fig.update_yaxes(rangemode="tozero")
         st.plotly_chart(fig, width="stretch")
 
     with chart_col4:
@@ -190,8 +193,24 @@ if not filtered_df.empty:
     "recommended_action", "contract_status", "days_to_contract_end"
     ]
     table_df = filtered_df[display_cols].sort_values("overall_health_score")
+    table_df.rename(columns={
+        "company_name": "Company",
+        "salesperson": "Account Manager",
+        "company_size": "Company Size",
+        "region": "Region",
+        "monthly_fee": "Monthly Fee",
+        "overall_health_score": "Health Score",
+        "health_band": "Health Band",
+        "recommended_action": "Recommended Action", 
+        "contract_status": "Contract Status", 
+        "days_to_contract_end": "Days to Contract End Date" 
+        }, inplace=True)
+    table_df["Monthly Fee"] = table_df["Monthly Fee"].apply(
+    lambda x: f"{fee_unit}{x:,.2f}" if pd.notna(x) else "Unknown"
+)
     styled_table = table_df.style.apply(colour_health_band, axis=1)
-    st.dataframe(styled_table, use_container_width=True)
+    
+    st.dataframe(styled_table, width="stretch")
 
 else:
     st.info("No clients match the current filters.")

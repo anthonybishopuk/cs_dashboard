@@ -5,5 +5,5 @@ def colour_health_band(row):
         "Watch": "background-color: #fff3cd",
         "Healthy": "background-color: #d4edda"
     }
-    colour = colours.get(row["health_band"], "")
+    colour = colours.get(row["Health Band"], "")
     return [colour] * len(row)
