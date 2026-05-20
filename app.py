@@ -28,7 +28,7 @@ st.divider()
 col1, col2, col3 = st.columns(3)
 
 col1.metric(
-    "🔴 Critical (Health below 40)",
+    "🔴 Critical (Health below 60)",
     len(at_risk_df)
 )
 

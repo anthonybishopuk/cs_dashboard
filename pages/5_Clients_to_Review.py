@@ -101,7 +101,7 @@ if not filtered_df.empty:
 
     usage_df = load_monthly_usage(selected_team_id)
     usage_df = prepare_time_series(usage_df)
-    
+
     st.divider()
 
     st.header(selected_company)
@@ -205,11 +205,13 @@ if not filtered_df.empty:
         "contract_status": "Contract Status", 
         "days_to_contract_end": "Days to Contract End Date" 
         }, inplace=True)
-    table_df["Monthly Fee"] = table_df["Monthly Fee"].apply(
-    lambda x: f"{fee_unit}{x:,.2f}" if pd.notna(x) else "Unknown"
-)
-    styled_table = table_df.style.apply(colour_health_band, axis=1)
     
+    table_df["Monthly Fee"] = [
+        f"£{x:,.2f}" if r == "UK" else f"${x:,.2f}" if pd.notna(x) else "Unknown"
+        for x, r in zip(table_df["Monthly Fee"], table_df["Region"])
+    ]
+    styled_table = table_df.style.apply(colour_health_band, axis=1)
+
     st.dataframe(styled_table, width="stretch")
 
 else:

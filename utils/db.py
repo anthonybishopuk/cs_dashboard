@@ -84,7 +84,7 @@ def load_at_risk_clients():
             monthly_fee,
             salesperson
         FROM at_risk_next_actions
-        WHERE overall_health_score <= 40
+        WHERE overall_health_score <= 60
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)
