@@ -28,3 +28,12 @@ CREATE TABLE IF NOT EXISTS clients_raw (
     total_jobs                INT,
     hires_in_past_year        INT
 );
+
+-- Excluded Accounts
+CREATE TABLE IF NOT EXISTS excluded_accounts (
+	team_id INT PRIMARY KEY,
+	company_name TEXT,
+	reason TEXT,
+	excluded_by TEXT,
+	excluded_date TEXT
+);

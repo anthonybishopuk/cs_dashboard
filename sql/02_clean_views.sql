@@ -27,5 +27,23 @@ SELECT
 	total_resumes,
 	total_jobs,
 	hires_in_past_year
-FROM clients_raw
-WHERE is_test IS NOT TRUE;
+FROM clients_raw cr
+WHERE is_test IS NOT TRUE
+AND LOWER (cr.company_name) NOT LIKE '%test%'
+AND LOWER (cr.company_name) NOT LIKE '%demo%'
+AND LOWER (cr.company_name) NOT LIKE '%integration%'
+AND LOWER (cr.company_name) NOT LIKE '%sandbox%'
+AND LOWER (cr.company_name) NOT LIKE '%maria%'
+AND LOWER (cr.company_name) NOT LIKE '%roula%'
+AND LOWER (cr.company_name) NOT LIKE '%beth%'
+AND LOWER (cr.company_name) NOT LIKE '%angie%'
+AND LOWER (cr.company_name) NOT LIKE '%charles%'
+AND LOWER (cr.company_name) NOT LIKE '%database%'
+AND LOWER (cr.company_name) NOT LIKE '%email%'
+AND LOWER (cr.company_name) NOT LIKE '%harvest%'
+AND LOWER (cr.company_name) NOT LIKE '%jana%'
+AND LOWER (cr.company_name) NOT LIKE '%jobdiva%'
+AND LOWER (cr.company_name) NOT LIKE '%qa%'
+AND cr.team_id NOT IN(
+	SELECT team_id FROM excluded_accounts ea
+);

@@ -210,6 +210,10 @@ if not filtered_df.empty:
         f"£{x:,.2f}" if r == "UK" else f"${x:,.2f}" if pd.notna(x) else "Unknown"
         for x, r in zip(table_df["Monthly Fee"], table_df["Region"])
     ]
+    table_df["Days to Contract End Date"] = table_df["Days to Contract End Date"].apply(
+        lambda x: f"{x:,.0f}" if pd.notna(x) else "Unknown"
+        )
+
     styled_table = table_df.style.apply(colour_health_band, axis=1)
 
     st.dataframe(styled_table, width="stretch")
