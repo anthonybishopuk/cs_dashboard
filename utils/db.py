@@ -155,3 +155,37 @@ def load_onboarding_clients(team_id):
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn, params=(team_id,))
+    
+
+def load_churn_data():
+    query = """
+        SELECT
+            cc.team_id,
+            cc.company_name,
+            cc.region,
+            ls.company_size,
+            cc.salesperson,
+            cc.snapshot_month
+        FROM clients_clean cc
+        LEFT JOIN latest_snapshot ls
+            ON cc.team_id = ls.team_id
+            AND cc.snapshot_month = ls.snapshot_month
+        WHERE cc.snapshot_month >= '2025-06-01'
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn)
+    
+
+def load_portfolio_summary():
+    query = """
+        SELECT
+            COUNT(DISTINCT ls.team_id) AS total_clients,
+            SUM(ls.monthly_fee) AS total_mrr,
+            ROUND(AVG(ohs.overall_health_score), 1) AS avg_health_score
+        FROM latest_snapshot ls
+        LEFT JOIN overall_health_score ohs
+            ON ls.team_id = ohs.team_id
+            AND ls.snapshot_month = ohs.snapshot_month
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn)
