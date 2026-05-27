@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from utils.db import load_portfolio_summary, load_churn_data
+from utils.db import load_portfolio_summary, load_churn_data, load_scatter_data
 from utils.data_prep import calculate_churn_summary, prepare_churn_chart_data
 
 st.set_page_config(layout="wide")
@@ -103,3 +103,27 @@ with uk_churn_col2:
     )
     st.plotly_chart(new_churn_fig, width='stretch')
 
+st.divider()
+
+scatter_df = load_scatter_data()
+st.dataframe(scatter_df)
+
+scatter_fig = px.scatter(
+    scatter_df,
+    x='active_users',
+    y='fee_per_user',
+    color='region',
+    hover_name='company_name',
+    color_discrete_map={
+        'UK': 'red',
+        'US': 'blue'
+    },
+    title='Fee per User',
+    labels={
+        'active_users': 'Active Users',
+        'fee_per_user': 'Fee per User',
+        'region': 'Region'
+    }
+)
+scatter_fig.update_yaxes(rangemode="tozero")
+st.plotly_chart(scatter_fig, width='stretch')

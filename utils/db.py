@@ -93,22 +93,31 @@ def load_at_risk_clients():
 def load_clients_to_review():
     query = """
         SELECT
-            company_name,
-            team_id,
-            region,
-            salesperson,
-            overall_health_score,
-            health_band,
-            health_narrative,
-            risk_flag,
-            contract_status,
-            days_to_contract_end,
-            user_trend,
-            engagement_delta,
-            company_size,
-            monthly_fee,
-            recommended_action
-        FROM at_risk_next_actions
+            arna.company_name,
+            arna.team_id,
+            arna.region,
+            arna.salesperson,
+            arna.overall_health_score,
+            arna.health_band,
+            arna.health_narrative,
+            arna.risk_flag,
+            arna.contract_status,
+            arna.days_to_contract_end,
+            arna.user_trend,
+            arna.engagement_delta,
+            arna.company_size,
+            arna.monthly_fee,
+            arna.recommended_action,
+            pca.child_team_id,
+            CASE 
+                WHEN pca.child_team_id IS NOT NULL 
+                    THEN 1 
+                ELSE 0 
+            END AS is_child_account,
+            pca.parent_company_name
+        FROM at_risk_next_actions arna
+        LEFT JOIN parent_child_accounts pca
+            ON arna.team_id = pca.child_team_id
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)
@@ -186,6 +195,30 @@ def load_portfolio_summary():
         LEFT JOIN overall_health_score ohs
             ON ls.team_id = ohs.team_id
             AND ls.snapshot_month = ohs.snapshot_month
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn)
+    
+def load_scatter_data():
+    query = """
+        SELECT
+            ls.team_id,
+            ls.company_name,
+            ls.region,
+            ls.company_size,
+            ls.active_users,
+            pem.fee_per_user,
+            ls.monthly_fee
+        FROM latest_snapshot ls
+        LEFT JOIN pricing_exposure_monthly pem
+            ON ls.team_id = pem.team_id
+            AND ls.snapshot_month = pem.snapshot_month
+        LEFT JOIN company_overview co
+            ON ls.team_id = co.team_id
+        WHERE co.client_stage != 'Onboarding'
+            AND ls.team_id NOT IN (
+                SELECT child_team_id FROM parent_child_accounts
+            )
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)

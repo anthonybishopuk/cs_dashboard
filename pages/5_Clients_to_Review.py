@@ -110,10 +110,15 @@ if not filtered_df.empty:
     client_col1, client_col2 = st.columns(2)
 
     with client_col1:
-        fee = selected_client["monthly_fee"]
-        fee_unit = "£" if selected_client["region"] == "UK" else "$"
-        fee_display = "Unknown" if pd.isna(fee) else f"{fee_unit}{int(fee):,}"
-        st.markdown(f"Monthly fee: {fee_display}")
+        if selected_client['is_child_account'] == 1:
+            st.markdown(f"Monthly fee: Child account - fee included in {selected_client['parent_company_name']}")
+        else:
+            fee = selected_client["monthly_fee"]
+            fee_unit = "£" if selected_client["region"] == "UK" else "$"
+            fee_display = "Unknown" if pd.isna(fee) else f"{fee_unit}{int(fee):,}"
+            st.markdown(f"Monthly fee: {fee_display}")
+
+
         st.markdown(f"Users: {usage_df['active_users'].iloc[-1]}")
         st.markdown(f"Risk: {selected_client["risk_flag"]}")
         st.markdown(f"Health Score: {selected_client["overall_health_score"]}")
@@ -185,14 +190,17 @@ if not filtered_df.empty:
                 "overall_health_score": "Health Score"
             }
         )
+        fig.update_yaxes(rangemode="tozero")
         st.plotly_chart(fig, width="stretch") 
 
     display_cols = [
     "company_name", "salesperson", "company_size", "region",
     "monthly_fee", "overall_health_score", "health_band",
-    "recommended_action", "contract_status", "days_to_contract_end"
+    "recommended_action", "contract_status", "days_to_contract_end", "is_child_account", "parent_company_name"
     ]
     table_df = filtered_df[display_cols].sort_values("overall_health_score")
+    table_df["is_child_account"] = table_df["is_child_account"].map({1: 'Yes', 0: ''})
+    table_df["parent_company_name"] = table_df["parent_company_name"].fillna("")
     table_df.rename(columns={
         "company_name": "Company",
         "salesperson": "Account Manager",
@@ -203,11 +211,16 @@ if not filtered_df.empty:
         "health_band": "Health Band",
         "recommended_action": "Recommended Action", 
         "contract_status": "Contract Status", 
-        "days_to_contract_end": "Days to Contract End Date" 
+        "days_to_contract_end": "Days to Contract End Date",
+        "is_child_account": "Child Account",
+        "parent_company_name": "Parent Company"
         }, inplace=True)
     
     table_df["Monthly Fee"] = [
-        f"£{x:,.2f}" if r == "UK" else f"${x:,.2f}" if pd.notna(x) else "Unknown"
+        "Child account" if c == "Yes"
+        else f"£{x:,.2f}" if r == "UK"
+        else f"${x:,.2f}" if pd.notna(x) 
+        else "Unknown"
         for x, r in zip(table_df["Monthly Fee"], table_df["Region"])
     ]
     table_df["Days to Contract End Date"] = table_df["Days to Contract End Date"].apply(
