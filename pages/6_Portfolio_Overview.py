@@ -1,8 +1,8 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from utils.db import load_portfolio_summary, load_churn_data, load_scatter_data
-from utils.data_prep import calculate_churn_summary, prepare_churn_chart_data
+from utils.db import load_portfolio_summary, load_churn_data, load_scatter_data, load_mrr_history
+from utils.data_prep import calculate_churn_summary, prepare_churn_chart_data, calculate_nrr_grr
 
 st.set_page_config(layout="wide")
 st.title("Portfolio Overview")
@@ -106,24 +106,87 @@ with uk_churn_col2:
 st.divider()
 
 scatter_df = load_scatter_data()
+small_df = scatter_df[scatter_df['company_size'].isin(['micro', 'small'])]
+large_df = scatter_df[scatter_df['company_size'].isin(['medium', 'large'])]
+
+scatter_col1, scatter_col2 = st.columns(2)
+
+with scatter_col1:
+    scatter_fig = px.scatter(
+        small_df,
+        x='total_users',
+        y='fee_per_user',
+        color='region',
+        hover_name='company_name',
+        color_discrete_map={
+            'UK': 'red',
+            'US': 'blue'
+        },
+        title='Micro & Small compannies - Fee per User',
+        labels={
+            'total_users': 'Active Users',
+            'fee_per_user': 'Fee per User',
+            'region': 'Region'
+        }
+    )
+    scatter_fig.update_yaxes(rangemode="tozero")
+    st.plotly_chart(scatter_fig, width='stretch')
+
+
+with scatter_col2:
+    scatter_fig = px.scatter(
+        large_df,
+        x='total_users',
+        y='fee_per_user',
+        color='region',
+        hover_name='company_name',
+        color_discrete_map={
+            'UK': 'red',
+            'US': 'blue'
+        },
+        title='Medium & Large companies - Fee per User',
+        labels={
+            'total_users': 'Active Users',
+            'fee_per_user': 'Fee per User',
+            'region': 'Region'
+        }
+    )
+    scatter_fig.update_yaxes(rangemode="tozero")
+    st.plotly_chart(scatter_fig, width='stretch')
+
 st.dataframe(scatter_df)
 
-scatter_fig = px.scatter(
-    scatter_df,
-    x='active_users',
-    y='fee_per_user',
-    color='region',
-    hover_name='company_name',
-    color_discrete_map={
-        'UK': 'red',
-        'US': 'blue'
-    },
-    title='Fee per User',
+st.divider()
+
+# NRR_GRR GRAPHS
+
+mrr_history = load_mrr_history()
+nrr_grr_summary = calculate_nrr_grr(mrr_history)
+nrr_grr_plot = nrr_grr_summary.reset_index()
+nrr_grr_plot.rename(columns={
+    'index': 'snapshot_month'
+}, inplace=True)
+
+grr_fig = px.line(
+    nrr_grr_plot,
+    x='snapshot_month',
+    y='grr_result',
+    title='Monthly GRR',
     labels={
-        'active_users': 'Active Users',
-        'fee_per_user': 'Fee per User',
-        'region': 'Region'
+        'snapshot_month': 'Month',
+        'grr_result': 'GRR (%)'
     }
 )
-scatter_fig.update_yaxes(rangemode="tozero")
-st.plotly_chart(scatter_fig, width='stretch')
+grr_fig.data[0].name = 'GRR'
+grr_fig.data[0].showlegend = True
+grr_fig.add_scatter(
+    x=nrr_grr_plot['snapshot_month'],
+    y=nrr_grr_plot['nrr_result'],
+    mode='lines',
+    name='NRR'
+)
+
+grr_fig.update_yaxes(rangemode="tozero")
+st.plotly_chart(grr_fig, width="stretch")
+
+st.divider()

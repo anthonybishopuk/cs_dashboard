@@ -217,7 +217,7 @@ if not filtered_df.empty:
         }, inplace=True)
     
     table_df["Monthly Fee"] = [
-        "Child account" if c == "Yes"
+        "Child account" if x == "Yes"
         else f"£{x:,.2f}" if r == "UK"
         else f"${x:,.2f}" if pd.notna(x) 
         else "Unknown"

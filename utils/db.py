@@ -198,27 +198,28 @@ def load_portfolio_summary():
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)
-    
+
+  
 def load_scatter_data():
     query = """
         SELECT
-            ls.team_id,
-            ls.company_name,
-            ls.region,
-            ls.company_size,
-            ls.active_users,
-            pem.fee_per_user,
-            ls.monthly_fee
-        FROM latest_snapshot ls
-        LEFT JOIN pricing_exposure_monthly pem
-            ON ls.team_id = pem.team_id
-            AND ls.snapshot_month = pem.snapshot_month
-        LEFT JOIN company_overview co
-            ON ls.team_id = co.team_id
-        WHERE co.client_stage != 'Onboarding'
-            AND ls.team_id NOT IN (
-                SELECT child_team_id FROM parent_child_accounts
-            )
+            *
+        FROM consolidated_fee_per_user
+        WHERE fee_per_user IS NOT NULL
+        AND account_team_id NOT IN (
+            SELECT team_id FROM company_overview
+            WHERE client_stage = 'Onboarding'
+        )
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn)
+
+
+def load_mrr_history():
+    query = """
+        SELECT
+            *
+        FROM consolidated_mrr_history
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)

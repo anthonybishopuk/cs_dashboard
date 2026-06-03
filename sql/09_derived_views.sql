@@ -255,3 +255,66 @@ LEFT JOIN engagement_trend et
 LEFT JOIN user_trend_monthly ut
 	ON ls.team_id = ut.team_id
 	AND ls.snapshot_month = ut.snapshot_month;
+
+
+-- consolidated_fee_per_user source
+
+DROP VIEW IF EXISTS consolidated_fee_per_user;
+CREATE VIEW consolidated_fee_per_user AS
+WITH consolidated AS (
+	SELECT
+		COALESCE(pca.parent_team_id, ls.team_id) AS account_team_id,
+		SUM(ls.active_users) AS total_users,
+		MAX(ls.monthly_fee) AS monthly_fee
+	FROM latest_snapshot ls 
+	LEFT JOIN parent_child_accounts pca 
+		ON ls.team_id = pca.child_team_id
+	GROUP BY account_team_id
+)
+SELECT
+	c.account_team_id,
+	ls.company_name,
+	ls.region,
+	ls.company_size,
+	c.total_users,
+	c.monthly_fee,
+	ROUND(c.monthly_fee * 1.0 / NULLIF(c.total_users, 0), 2) AS fee_per_user
+FROM consolidated c
+LEFT JOIN latest_snapshot ls 
+	ON c.account_team_id = ls.team_id
+;
+
+
+DROP VIEW IF EXISTS consolidated_mrr_history;
+CREATE VIEW consolidated_mrr_history AS
+WITH consolidated AS (
+	SELECT
+		COALESCE(pca.parent_team_id, cc.team_id) AS account_team_id,
+		SUM(cc.active_users) AS total_users,
+		MAX(cc.monthly_fee) AS monthly_fee,
+		cc.snapshot_month
+	FROM clients_clean cc 
+	LEFT JOIN parent_child_accounts pca 
+		ON cc.team_id = pca.child_team_id
+	GROUP BY account_team_id, cc.snapshot_month
+)
+SELECT
+	c.account_team_id,
+	cc.company_name,
+	cc.region,
+	cc.snapshot_month,
+	CASE
+		WHEN c.total_users BETWEEN 1 AND 9 THEN 'micro'
+		WHEN c.total_users BETWEEN 10 AND 49 THEN 'small'
+		WHEN c.total_users BETWEEN 50 AND 250 THEN 'medium'
+		WHEN c.total_users >=250 THEN 'large'
+		ELSE 'unknown'
+	END AS company_size,
+	c.total_users,
+	c.monthly_fee,
+	ROUND(c.monthly_fee * 1.0 / NULLIF(c.total_users, 0), 2) AS fee_per_user
+FROM consolidated c
+LEFT JOIN clients_clean cc 
+	ON c.account_team_id = cc.team_id
+	AND c.snapshot_month = cc.snapshot_month
+;
