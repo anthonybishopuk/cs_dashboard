@@ -30,6 +30,9 @@ with global_col3:
 
 
 # CHURN GRAPHS
+
+st.header("Churn")
+
 churn_df = load_churn_data()
 churn_summary = calculate_churn_summary(churn_df)
 
@@ -57,6 +60,7 @@ st.plotly_chart(churn_fig, width="stretch")
 st.divider()
 
 # US AND UK - NEW & LEAVING CLIENTS
+
 churn_melted = prepare_churn_chart_data(churn_summary)
 us_df = churn_melted[churn_melted['region'] == 'US']
 uk_df = churn_melted[churn_melted['region'] == 'UK']
@@ -105,6 +109,74 @@ with uk_churn_col2:
 
 st.divider()
 
+# NRR_GRR GRAPHS
+st.header('GRR & NRR')
+
+mrr_history = load_mrr_history()
+us_mrr = mrr_history[mrr_history['region'] == 'US']
+uk_mrr = mrr_history[mrr_history['region'] == 'UK']
+
+us_nrr_grr_col, uk_nrr_grr_col = st.columns(2)
+
+with us_nrr_grr_col:
+    us_nrr_grr = calculate_nrr_grr(us_mrr).reset_index()
+    us_nrr_grr.rename(columns={
+        'index': 'snapshot_month'
+    }, inplace=True)
+    grr_fig = px.line(
+        us_nrr_grr,
+        x='snapshot_month',
+        y='grr_result',
+        title='US Monthly GRR & NRR',
+        labels={
+            'snapshot_month': 'Month',
+            'grr_result': 'GRR (%)'
+        }
+    )
+    grr_fig.data[0].name = 'GRR'
+    grr_fig.data[0].showlegend = True
+    grr_fig.add_scatter(
+        x=us_nrr_grr['snapshot_month'],
+        y=us_nrr_grr['nrr_result'],
+        mode='lines',
+        name='NRR'
+    )
+    grr_fig.update_yaxes(rangemode="tozero")
+    st.plotly_chart(grr_fig, width="stretch")
+
+
+with uk_nrr_grr_col:
+    uk_nrr_grr = calculate_nrr_grr(uk_mrr).reset_index()
+    uk_nrr_grr.rename(columns={
+        'index': 'snapshot_month'
+    }, inplace=True)
+    grr_fig = px.line(
+        uk_nrr_grr,
+        x='snapshot_month',
+        y='grr_result',
+        title='UK Monthly GRR & NRR',
+        labels={
+            'snapshot_month': 'Month',
+            'grr_result': 'GRR (%)'
+        }
+    )
+    grr_fig.data[0].name = 'GRR'
+    grr_fig.data[0].showlegend = True
+    grr_fig.add_scatter(
+        x=uk_nrr_grr['snapshot_month'],
+        y=uk_nrr_grr['nrr_result'],
+        mode='lines',
+        name='NRR'
+    )
+    grr_fig.update_yaxes(rangemode="tozero")
+    st.plotly_chart(grr_fig, width="stretch")
+
+st.divider()
+
+
+# SCATTER OF FEE PER USER FOR CLIENTS
+
+st.header('Client Pricing')
 scatter_df = load_scatter_data()
 small_df = scatter_df[scatter_df['company_size'].isin(['micro', 'small'])]
 large_df = scatter_df[scatter_df['company_size'].isin(['medium', 'large'])]
@@ -122,7 +194,7 @@ with scatter_col1:
             'UK': 'red',
             'US': 'blue'
         },
-        title='Micro & Small compannies - Fee per User',
+        title='Micro & Small companies - Fee per User',
         labels={
             'total_users': 'Active Users',
             'fee_per_user': 'Fee per User',
@@ -153,40 +225,3 @@ with scatter_col2:
     )
     scatter_fig.update_yaxes(rangemode="tozero")
     st.plotly_chart(scatter_fig, width='stretch')
-
-st.dataframe(scatter_df)
-
-st.divider()
-
-# NRR_GRR GRAPHS
-
-mrr_history = load_mrr_history()
-nrr_grr_summary = calculate_nrr_grr(mrr_history)
-nrr_grr_plot = nrr_grr_summary.reset_index()
-nrr_grr_plot.rename(columns={
-    'index': 'snapshot_month'
-}, inplace=True)
-
-grr_fig = px.line(
-    nrr_grr_plot,
-    x='snapshot_month',
-    y='grr_result',
-    title='Monthly GRR',
-    labels={
-        'snapshot_month': 'Month',
-        'grr_result': 'GRR (%)'
-    }
-)
-grr_fig.data[0].name = 'GRR'
-grr_fig.data[0].showlegend = True
-grr_fig.add_scatter(
-    x=nrr_grr_plot['snapshot_month'],
-    y=nrr_grr_plot['nrr_result'],
-    mode='lines',
-    name='NRR'
-)
-
-grr_fig.update_yaxes(rangemode="tozero")
-st.plotly_chart(grr_fig, width="stretch")
-
-st.divider()
