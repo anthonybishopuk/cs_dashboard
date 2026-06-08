@@ -77,6 +77,7 @@ def prepare_churn_chart_data(churn_summary):
 
 
 def calculate_nrr_grr(mrr_history):
+    mrr_history = mrr_history.copy()
     mrr_history['snapshot_month'] = pd.to_datetime(mrr_history['snapshot_month'])
     mrr_history = mrr_history.sort_values(['account_team_id', 'snapshot_month'])
     mrr_history['prev_fee'] = mrr_history.groupby('account_team_id')['monthly_fee'].shift(1)

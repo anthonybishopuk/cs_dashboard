@@ -6,55 +6,72 @@
 DROP VIEW IF EXISTS overall_health_score;
 CREATE VIEW overall_health_score AS
 WITH base_metrics AS (
-	SELECT
-		cc.team_id,
-		cc.company_name,
-		cc.snapshot_month,
-		-- Sum all penalty sources; floor at 0
-		CASE
-			WHEN 100 - (
-				COALESCE(ump.user_penalty, 0) +
-				COALESCE(usdp.sharp_decline_penalty, 0) +
-				COALESCE(epm.engagement_penalty, 0) +
-				COALESCE(jppm.jobs_posted_penalty, 0)
-			) < 0 THEN 0
-			ELSE 100 - (
-				COALESCE(ump.user_penalty, 0) +
-				COALESCE(usdp.sharp_decline_penalty, 0) +
-				COALESCE(epm.engagement_penalty, 0) +
-				COALESCE(jppm.jobs_posted_penalty, 0)
-			)
-		END AS overall_health_score,
-		epm.engagement_penalty,
-		ump.user_penalty,
-		usdp.sharp_decline_penalty,
-		pem.fee_per_user,
-        jppm.jobs_posted_penalty
-	FROM clients_clean cc
-	LEFT JOIN engagement_penalty_monthly epm
-		ON cc.team_id = epm.team_id
-		AND cc.snapshot_month = epm.snapshot_month
-	LEFT JOIN user_monthly_penalty ump
-		ON cc.team_id = ump.team_id
-		AND cc.snapshot_month = ump.snapshot_month
-	LEFT JOIN user_sharp_decline_penalty usdp
-		ON cc.team_id = usdp.team_id
-		AND cc.snapshot_month = usdp.snapshot_month
-	LEFT JOIN pricing_exposure_monthly pem
-		ON cc.team_id = pem.team_id
-		AND cc.snapshot_month = pem.snapshot_month
-	LEFT JOIN jobs_posted_penalty_monthly jppm
-		ON cc.team_id = jppm.team_id
-		AND cc.snapshot_month = jppm.snapshot_month
-	ORDER BY cc.snapshot_month DESC, overall_health_score ASC
-)
 SELECT
+	cc.team_id,
+	cc.company_name,
+	cc.snapshot_month,
+	CASE 
+		WHEN 100 - (
+			COALESCE(ump.user_penalty, 0) +
+			COALESCE(usdp.sharp_decline_penalty, 0) +
+			COALESCE(epm.engagement_penalty, 0) +
+			COALESCE(jppm.jobs_posted_penalty, 0) +
+			COALESCE(aepm.abs_engagement_penalty, 0) +
+			COALESCE(nopm.no_outcome_penalty, 0) +
+			COALESCE(ncapm.no_candidate_penalty, 0)
+		) < 0 THEN 0
+		ELSE 100 - (
+			COALESCE(ump.user_penalty, 0) +
+			COALESCE(usdp.sharp_decline_penalty, 0) +
+			COALESCE(epm.engagement_penalty, 0) +
+			COALESCE(jppm.jobs_posted_penalty, 0) +
+			COALESCE(aepm.abs_engagement_penalty, 0) +
+			COALESCE(nopm.no_outcome_penalty, 0) +
+			COALESCE(ncapm.no_candidate_penalty, 0)
+		)
+	END AS overall_health_score,
+	epm.engagement_penalty,
+	ump.user_penalty,
+	usdp.sharp_decline_penalty,
+	pem.fee_per_user,
+	jppm.jobs_posted_penalty,
+	aepm.abs_engagement_penalty,
+	nopm.no_outcome_penalty,
+	ncapm.no_candidate_penalty
+FROM clients_clean cc
+LEFT JOIN engagement_penalty_monthly epm
+	ON cc.team_id = epm.team_id
+	AND cc.snapshot_month = epm.snapshot_month
+LEFT JOIN user_monthly_penalty ump
+	ON cc.team_id = ump.team_id
+	AND cc.snapshot_month = ump.snapshot_month 
+LEFT JOIN user_sharp_decline_penalty usdp
+	ON cc.team_id = usdp.team_id
+	AND cc.snapshot_month = usdp.snapshot_month
+LEFT JOIN pricing_exposure_monthly pem
+	ON cc.team_id = pem.team_id
+	AND cc.snapshot_month = pem.snapshot_month
+LEFT JOIN jobs_posted_penalty_monthly jppm
+    ON cc.team_id = jppm.team_id
+    AND cc.snapshot_month = jppm.snapshot_month
+LEFT JOIN abs_engagement_penalty_monthly aepm
+    ON cc.team_id = aepm.team_id
+    AND cc.snapshot_month = aepm.snapshot_month
+LEFT JOIN no_outcome_penalty_monthly nopm
+    ON cc.team_id = nopm.team_id
+    AND cc.snapshot_month = nopm.snapshot_month
+LEFT JOIN no_candidate_activity_penalty_monthly ncapm
+    ON cc.team_id = ncapm.team_id
+    AND cc.snapshot_month = ncapm.snapshot_month
+ORDER BY cc.snapshot_month DESC, overall_health_score ASC
+)
+SELECT 
 	*,
 	CASE
-		WHEN overall_health_score >= 95 THEN 'Healthy'
-		WHEN overall_health_score >= 80 THEN 'Watch'
-		WHEN overall_health_score >= 60 THEN 'At Risk'
-		ELSE 'Critical'
+    	WHEN overall_health_score >= 95 THEN 'Healthy'
+    	WHEN overall_health_score >= 80 THEN 'Watch'
+    	WHEN overall_health_score >= 60 THEN 'At Risk'
+    	ELSE 'Critical'
 	END AS health_band
 FROM base_metrics;
 
@@ -103,84 +120,125 @@ DROP VIEW IF EXISTS health_narrative_monthly;
 CREATE VIEW health_narrative_monthly AS
 -- Generates a plain-English summary of what is driving a client's score.
 -- Each penalty source contributes a sentence; they are concatenated into health_narrative.
+-- health_narrative_monthly source
 WITH base AS (
-	SELECT
-		cc.team_id,
-		cc.company_name,
-		cc.snapshot_month,
-		epm.decline_streak_length,
-		epm.engagement_penalty,
-		ump.user_penalty,
-		usdp.sharp_decline_penalty,
-		jppm.jobs_posted_penalty,
-		pem.fee_per_user,
-		pem.has_pricing_data
-	FROM clients_clean cc
-	LEFT JOIN engagement_penalty_monthly epm
-		ON cc.team_id = epm.team_id
-		AND cc.snapshot_month = epm.snapshot_month
-	LEFT JOIN user_monthly_penalty ump
-		ON cc.team_id = ump.team_id
-		AND cc.snapshot_month = ump.snapshot_month
-	LEFT JOIN user_sharp_decline_penalty usdp
-		ON cc.team_id = usdp.team_id
-		AND cc.snapshot_month = usdp.snapshot_month
-	LEFT JOIN jobs_posted_penalty_monthly jppm
-		ON cc.team_id = jppm.team_id
-		AND cc.snapshot_month = jppm.snapshot_month
-	LEFT JOIN pricing_exposure_monthly pem
-		ON cc.team_id = pem.team_id
-		AND cc.snapshot_month = pem.snapshot_month
+    SELECT
+        cc.team_id,
+        cc.company_name,
+        cc.snapshot_month,
+        epm.decline_streak_length,
+        epm.engagement_penalty,
+        ump.user_penalty,
+        usdp.sharp_decline_penalty,
+        jppm.jobs_posted_penalty,
+        pem.fee_per_user,
+        pem.has_pricing_data,
+        aepm.abs_engagement_penalty,
+        nopm.no_outcome_penalty,
+        ncapm.no_candidate_penalty
+    FROM clients_clean cc
+    LEFT JOIN engagement_penalty_monthly epm
+        ON cc.team_id = epm.team_id
+       AND cc.snapshot_month = epm.snapshot_month
+    LEFT JOIN user_monthly_penalty ump
+        ON cc.team_id = ump.team_id
+       AND cc.snapshot_month = ump.snapshot_month
+    LEFT JOIN user_sharp_decline_penalty usdp
+        ON cc.team_id = usdp.team_id
+       AND cc.snapshot_month = usdp.snapshot_month
+    LEFT JOIN jobs_posted_penalty_monthly jppm
+        ON cc.team_id = jppm.team_id
+       AND cc.snapshot_month = jppm.snapshot_month
+    LEFT JOIN pricing_exposure_monthly pem
+        ON cc.team_id = pem.team_id
+       AND cc.snapshot_month = pem.snapshot_month
+    LEFT JOIN abs_engagement_penalty_monthly aepm 
+    	ON cc.team_id = aepm.team_id
+    	AND cc.snapshot_month = aepm.snapshot_month
+    LEFT JOIN no_outcome_penalty_monthly nopm
+    	ON cc.team_id = nopm.team_id
+    	AND cc.snapshot_month = nopm.snapshot_month
+    LEFT JOIN no_candidate_activity_penalty_monthly ncapm 
+    	ON cc.team_id = ncapm.team_id
+    	AND cc.snapshot_month = ncapm.snapshot_month
 ),
 narratives AS (
-	SELECT
-		*,
-		CASE
-			WHEN decline_streak_length >= 4
-				THEN 'Engagement has declined for several consecutive months. '
-			WHEN decline_streak_length BETWEEN 2 AND 3
-				THEN 'Engagement is trending down compared to previous months. '
-			ELSE ''
-		END AS engagement_narrative,
-		CASE
-			WHEN user_penalty > 0
-				THEN 'Active user numbers have reduced over recent periods. '
-			ELSE ''
-		END AS user_narrative,
-		CASE
-			WHEN sharp_decline_penalty > 0
-				THEN 'A significant drop in active users was recorded recently. '
-			ELSE ''
-		END AS sharp_decline_narrative,
-		CASE
-			WHEN jobs_posted_penalty > 0
-				THEN 'Job posting activity has decreased compared to earlier months. '
-			ELSE ''
-		END AS jobs_narrative,
-		CASE
-			WHEN has_pricing_data = 1
-			 AND fee_per_user IS NOT NULL
-			 AND fee_per_user > 100
-				THEN 'Cost per user is relatively high for the current licence base. '
-			WHEN has_pricing_data = 1
-			 AND fee_per_user IS NOT NULL
-			 AND fee_per_user < 30
-				THEN 'Account appears cost-efficient given current usage. '
-			ELSE ''
-		END AS pricing_narrative
-	FROM base
+    SELECT
+        *,
+        -- Engagement narrative
+        CASE
+            WHEN decline_streak_length >= 4
+                THEN 'Engagement has declined for several consecutive months. '
+            WHEN decline_streak_length BETWEEN 2 AND 3
+                THEN 'Engagement is trending down compared to previous months. '
+            ELSE ''
+        END AS engagement_narrative,
+        -- User licence narrative
+        CASE
+            WHEN user_penalty > 0
+                THEN 'Active user numbers have reduced over recent periods. '
+            ELSE ''
+        END AS user_narrative,
+        -- Sharp user drop narrative
+        CASE
+            WHEN sharp_decline_penalty > 0
+                THEN 'A significant drop in active users was recorded recently. '
+            ELSE ''
+        END AS sharp_decline_narrative,
+        -- Jobs activity narrative
+        CASE
+            WHEN jobs_posted_penalty > 0
+                THEN 'Job posting activity has decreased compared to earlier months. '
+            ELSE ''
+        END AS jobs_narrative,
+        -- Pricing exposure narrative
+        CASE
+            WHEN has_pricing_data = 1
+             AND fee_per_user IS NOT NULL
+             AND fee_per_user > 100
+                THEN 'Cost per user is relatively high for the current licence base. '
+            WHEN has_pricing_data = 1
+             AND fee_per_user IS NOT NULL
+             AND fee_per_user < 30
+                THEN 'Account appears cost-efficient given current usage. '
+            ELSE ''
+        END AS pricing_narrative,
+        -- Per user engagement drop
+        CASE
+        	WHEN abs_engagement_penalty > 10
+        		THEN 'Platform activity is critically low or absent. '
+        	WHEN abs_engagement_penalty BETWEEN 5 AND 9
+        		THEN 'Platform activity per user is below expected levels. '
+        	ELSE ''
+        END AS abs_engagement_narrative,
+        -- Hiring activity narrative
+        CASE
+        	WHEN no_outcome_penalty > 5
+        		THEN 'Little or no hiring activity has been recorded in the past year. '
+        	ELSE ''
+        END AS hiring_narrative,
+        -- Candidate activity narrative
+        CASE
+        	WHEN no_candidate_penalty > 5
+        		THEN 'Candidate viewing activity is minimal or absent. '
+        	ELSE ''
+        END AS candidate_activity_narrative
+    FROM base
 )
 SELECT
-	team_id,
-	company_name,
-	snapshot_month,
-	TRIM(
-		COALESCE(engagement_narrative, '') ||
+    team_id,
+    company_name,
+    snapshot_month,
+    TRIM(
+	    COALESCE(abs_engagement_narrative, '') ||
+        COALESCE(engagement_narrative, '') ||
+        COALESCE(candidate_activity_narrative, '') ||
+        COALESCE(jobs_narrative, '') ||
+        COALESCE(hiring_narrative, '') ||
 		COALESCE(user_narrative, '') ||
-		COALESCE(sharp_decline_narrative, '') ||
-		COALESCE(jobs_narrative, '') ||
-		COALESCE(pricing_narrative, '')
-	) AS health_narrative
+        COALESCE(sharp_decline_narrative, '') ||
+        COALESCE(pricing_narrative, '')
+    ) AS health_narrative
 FROM narratives;
 
 

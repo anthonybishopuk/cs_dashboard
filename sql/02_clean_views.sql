@@ -1,5 +1,7 @@
 -- Standardisation and casting
 DROP VIEW IF EXISTS clients_clean;
+-- clients_clean source
+
 CREATE VIEW clients_clean AS
 SELECT
 	company_name,
@@ -35,6 +37,7 @@ AND LOWER (cr.company_name) NOT LIKE '%integration%'
 AND LOWER (cr.company_name) NOT LIKE '%sandbox%'
 AND LOWER (cr.company_name) NOT LIKE '%maria%'
 AND LOWER (cr.company_name) NOT LIKE '%roula%'
+AND LOWER (cr.company_name) NOT LIKE 'sassinova'
 AND LOWER (cr.company_name) NOT LIKE '%beth%'
 AND LOWER (cr.company_name) NOT LIKE '%angie%'
 AND LOWER (cr.company_name) NOT LIKE '%charles%'
@@ -44,6 +47,13 @@ AND LOWER (cr.company_name) NOT LIKE '%harvest%'
 AND LOWER (cr.company_name) NOT LIKE '%jana%'
 AND LOWER (cr.company_name) NOT LIKE '%jobdiva%'
 AND LOWER (cr.company_name) NOT LIKE '%qa%'
+AND LOWER (cr.company_name) NOT LIKE '%divavms%'
 AND cr.team_id NOT IN(
 	SELECT team_id FROM excluded_accounts ea
+	WHERE exclude_from_date IS NULL
+)
+AND NOT EXISTS (
+	SELECT 1 FROM excluded_accounts ea
+	WHERE ea.team_id = cr.team_id
+	AND ea.exclude_from_date IS NOT NULL AND cr.snapshot_month >= ea.exclude_from_date
 );

@@ -29,11 +29,24 @@ CREATE TABLE IF NOT EXISTS clients_raw (
     hires_in_past_year        INT
 );
 
+
 -- Excluded Accounts
 CREATE TABLE IF NOT EXISTS excluded_accounts (
 	team_id INT PRIMARY KEY,
 	company_name TEXT,
 	reason TEXT,
 	excluded_by TEXT,
-	excluded_date TEXT
+	excluded_date TEXT,
+    exclude_from_date TEXT);
+
+
+-- Parent/Child Accounts
+CREATE TABLE IF NOT EXISTS parent_child_accounts (
+	child_team_id INT PRIMARY KEY,
+	parent_team_id INT,
+	parent_company_name TEXT,
+	child_company_name TEXT,
+	notes TEXT,
+	added_by TEXT,
+	added_date TEXT
 );

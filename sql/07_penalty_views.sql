@@ -357,3 +357,56 @@ SELECT
 	END AS has_pricing_data
 FROM base_metrics
 ORDER BY team_id, snapshot_month;
+
+
+DROP VIEW IF EXISTS abs_engagement_penalty_monthly;
+-- abs_engagement_penalty_monthly source
+CREATE VIEW abs_engagement_penalty_monthly AS
+SELECT
+    team_id,
+    snapshot_month,
+    clicks_per_user,
+    CASE
+        WHEN clicks_per_user = 0 THEN 30
+        WHEN clicks_per_user < 5 THEN 25
+        WHEN clicks_per_user < 20 THEN 15
+        WHEN clicks_per_user < 50 THEN 5
+        ELSE 0
+    END AS abs_engagement_penalty
+FROM (
+    SELECT
+        team_id,
+        snapshot_month,
+        ROUND(total_clicks_wo_api * 1.0 / NULLIF(active_users, 0), 2) AS clicks_per_user
+    FROM clients_clean
+);
+
+
+DROP VIEW IF EXISTS no_outcome_penalty_monthly;
+CREATE VIEW no_outcome_penalty_monthly AS
+SELECT
+	team_id,
+	snapshot_month,
+	hires_in_past_year,
+	view_candidates,
+	CASE
+		WHEN hires_in_past_year = 0 AND view_candidates < 50 THEN 15
+		WHEN hires_in_past_year < 5 AND view_candidates < 50 THEN 5
+		ELSE 0
+	END AS no_outcome_penalty
+FROM clients_clean cc;
+
+
+DROP VIEW IF EXISTS no_candidate_activity_penalty_monthly;
+CREATE VIEW no_candidate_activity_penalty_monthly AS
+SELECT
+	team_id,
+	snapshot_month,
+	hires_in_past_year,
+	view_candidates,
+	CASE
+		WHEN view_candidates = 0 THEN 10
+  		WHEN view_candidates < 10 THEN 5
+		ELSE 0
+	END AS no_candidate_penalty
+FROM clients_clean cc;
