@@ -2,6 +2,29 @@
 -- Each view calculates penalty points for a specific signal.
 -- Penalties are later combined in overall_health_score (08_health_views.sql).
 
+DROP VIEW IF EXISTS monthly_usage:
+CREATE VIEW monthly_usage AS
+SELECT
+    cc.snapshot_month,
+    cc.region,
+    cc.team_id,
+    cc.company_name,
+    cc.total_clicks_wo_api,
+	cc.active_users,
+	cc.active_coddlers,
+	cc.monthly_fee,
+    COALESCE(
+        MAX(
+        	cc.total_jobs
+          		- LAG(cc.total_jobs) OVER (
+                	PARTITION BY cc.team_id
+                	ORDER BY cc.snapshot_month
+            	),
+        	0
+        ),
+        0
+    ) AS jobs_posted
+FROM clients_clean cc;
 
 DROP VIEW IF EXISTS engagement_penalty_monthly;
 CREATE VIEW engagement_penalty_monthly AS

@@ -223,3 +223,17 @@ def load_mrr_history():
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)
+    
+
+def load_list_onboarding_clients():
+    query = """
+        SELECT
+            *
+        FROM onboarding_clients
+        WHERE snapshot_month = (
+            SELECT MAX(snapshot_month)
+            FROM clients_clean   
+        )
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn)

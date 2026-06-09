@@ -7,6 +7,7 @@ from utils.display import colour_health_band
 
 st.set_page_config(layout="wide")
 st.title("Clients to Review")
+st.caption("Health scores are a starting point for investigation, not a definitive assessment. Always apply account context before drawing conclusions.")
 
 df = load_clients_to_review()
 
@@ -133,53 +134,7 @@ if not filtered_df.empty:
 
     
     chart_col1, chart_col2 = st.columns(2)
-
     with chart_col1:
-        fig = px.line(
-            usage_df.reset_index(),
-            x="snapshot_month",
-            y="total_clicks_wo_api",
-            title="User Clicks",
-            labels={
-                "snapshot_month": "Month",
-                "total_clicks_wo_api": "Clicks"
-            }
-        )
-        fig.update_yaxes(rangemode="tozero")
-        st.plotly_chart(fig, width="stretch")
-
-    with chart_col2:
-        fig = px.line(
-            usage_df.reset_index(),
-            x="snapshot_month",
-            y="jobs_posted",
-            title="Jobs Posted",
-            labels={
-                "snapshot_month": "Month",
-                "jobs_posted": "Jobs"
-            }
-        )
-        fig.update_yaxes(rangemode="tozero")
-        st.plotly_chart(fig, width="stretch")
-
-
-    chart_col3, chart_col4 = st.columns(2)
-
-    with chart_col3:
-        fig = px.line(
-            usage_df.reset_index(),
-            x="snapshot_month",
-            y="active_users",
-            title="Users",
-            labels={
-                "snapshot_month": "Month",
-                "active_users": "Users"
-            }
-        )
-        fig.update_yaxes(rangemode="tozero")
-        st.plotly_chart(fig, width="stretch")
-
-    with chart_col4:
         fig = px.line(
             usage_df.reset_index(),
             x="snapshot_month",
@@ -191,12 +146,70 @@ if not filtered_df.empty:
             }
         )
         fig.update_yaxes(rangemode="tozero")
+        fig.update_layout(bargap=0.1)
         st.plotly_chart(fig, width="stretch") 
 
+
+    with chart_col2:
+        fig = px.bar(
+            usage_df.reset_index(),
+            x="snapshot_month",
+            y="total_clicks_wo_api",
+            title="User Clicks",
+            labels={
+                "snapshot_month": "Month",
+                "total_clicks_wo_api": "Clicks"
+            }
+        )
+        fig.update_yaxes(rangemode="tozero")
+        fig.update_layout(bargap=0.1)
+        st.plotly_chart(fig, width="stretch")
+    
+    chart_col3, chart_col4 = st.columns(2)
+    
+    with chart_col3:
+        fig = px.bar(
+            usage_df.reset_index().iloc[1:],
+            x="snapshot_month",
+            y="jobs_posted",
+            title="Jobs Posted",
+            labels={
+                "snapshot_month": "Month",
+                "jobs_posted": "Jobs"
+            }
+        )
+        fig.update_yaxes(rangemode="tozero")
+        fig.update_layout(bargap=0.1)
+        st.plotly_chart(fig, width="stretch")
+
+    with chart_col4:
+        fig = px.bar(
+            usage_df.reset_index(),
+            x="snapshot_month",
+            y="active_users",
+            title="Users",
+            labels={
+                "snapshot_month": "Month",
+                "active_users": "Users"
+            }
+        )
+        fig.update_yaxes(rangemode="tozero")
+        fig.update_layout(bargap=0.1)
+        st.plotly_chart(fig, width="stretch")
+
     display_cols = [
-    "company_name", "salesperson", "company_size", "region",
-    "monthly_fee", "overall_health_score", "health_band",
-    "recommended_action", "contract_status", "days_to_contract_end", "is_child_account", "parent_company_name"
+        "company_name",
+        "health_band",
+        "overall_health_score",
+        "recommended_action",
+        "salesperson", 
+        "monthly_fee",
+        "company_size",
+        "contract_status", 
+        "days_to_contract_end", 
+        "is_child_account", 
+        "parent_company_name",
+        "region"
     ]
     table_df = filtered_df[display_cols].sort_values("overall_health_score")
     table_df["is_child_account"] = table_df["is_child_account"].map({1: 'Yes', 0: ''})
@@ -229,7 +242,7 @@ if not filtered_df.empty:
 
     styled_table = table_df.style.apply(colour_health_band, axis=1)
 
-    st.dataframe(styled_table, width="stretch")
+    st.dataframe(styled_table, width="stretch", hide_index=True)
 
 else:
     st.info("No clients match the current filters.")
