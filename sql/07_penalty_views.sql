@@ -23,7 +23,27 @@ SELECT
         	0
         ),
         0
-    ) AS jobs_posted
+    ) AS jobs_posted,
+    COALESCE(
+    	cc.total_resumes
+    		- LAG(cc.total_resumes) OVER (
+    			PARTITION BY cc.team_id
+    			ORDER BY cc.snapshot_month
+    		),
+    	0
+    ) AS resumes_added,
+    cc.total_resumes,
+    cc.hires_in_past_year,
+    COALESCE(
+    	MAX(cc.hires_in_past_year
+    			- LAG(cc.hires_in_past_year) OVER (
+    				PARTITION BY cc.team_id
+    				ORDER BY cc.snapshot_month
+    			),
+    		0
+    	),
+    	0
+    ) AS hires_in_past_month
 FROM clients_clean cc;
 
 DROP VIEW IF EXISTS engagement_penalty_monthly;

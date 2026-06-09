@@ -39,7 +39,10 @@ def load_monthly_usage(team_id):
             total_clicks_wo_api,
             active_users,
             jobs_posted,
-            active_coddlers
+            active_coddlers,
+            total_resumes,
+            resumes_added,
+            hires_in_past_year
         FROM monthly_usage
         WHERE team_id = ?
         ORDER BY snapshot_month

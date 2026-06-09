@@ -145,6 +145,7 @@ if not filtered_df.empty:
                 "overall_health_score": "Health Score"
             }
         )
+        fig.update_xaxes(dtick="M1", tickformat="%b %Y")
         fig.update_yaxes(rangemode="tozero")
         fig.update_layout(bargap=0.1)
         st.plotly_chart(fig, width="stretch") 
@@ -161,6 +162,7 @@ if not filtered_df.empty:
                 "total_clicks_wo_api": "Clicks"
             }
         )
+        fig.update_xaxes(dtick="M1", tickformat="%b %Y")
         fig.update_yaxes(rangemode="tozero")
         fig.update_layout(bargap=0.1)
         st.plotly_chart(fig, width="stretch")
@@ -178,6 +180,7 @@ if not filtered_df.empty:
                 "jobs_posted": "Jobs"
             }
         )
+        fig.update_xaxes(dtick="M1", tickformat="%b %Y")
         fig.update_yaxes(rangemode="tozero")
         fig.update_layout(bargap=0.1)
         st.plotly_chart(fig, width="stretch")
@@ -193,6 +196,7 @@ if not filtered_df.empty:
                 "active_users": "Users"
             }
         )
+        fig.update_xaxes(dtick="M1", tickformat="%b %Y")
         fig.update_yaxes(rangemode="tozero")
         fig.update_layout(bargap=0.1)
         st.plotly_chart(fig, width="stretch")
