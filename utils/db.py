@@ -240,3 +240,34 @@ def load_list_onboarding_clients():
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)
+
+
+def load_parent_ids():
+    query = """
+        SELECT DISTINCT parent_team_id FROM parent_child_accounts
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn)['parent_team_id'].tolist()
+    
+
+def load_child_accounts(parent_team_id):
+    query = """
+        SELECT
+            pca.child_team_id AS team_id,
+            pca.child_company_name AS company_name,
+            ls.active_users,
+            ls.total_clicks_wo_api,
+            ls.monthly_fee,
+            ohs.overall_health_score,
+            ohs.health_band
+        FROM parent_child_accounts pca
+        LEFT JOIN latest_snapshot ls
+            ON pca.child_team_id = ls.team_id
+        LEFT JOIN overall_health_score ohs
+            ON pca.child_team_id = ohs.team_id
+            AND ls.snapshot_month = ohs.snapshot_month
+        WHERE pca.parent_team_id = ?
+        ORDER BY ohs.overall_health_score ASC
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn, params=(parent_team_id,))

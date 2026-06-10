@@ -112,16 +112,15 @@ if not filtered_df.empty:
     client_col1, client_col2, client_col3 = st.columns(3)
 
     with client_col1:
-        st.html(f"<strong>Onboarding Stage</strong>: {selected_client['Stage']}")
-        st.html(f"<strong>Months In</strong>: {selected_client['Months In']}")
-        st.html(f"<strong>Users</strong>: {selected_client['Users']}")
-
-    with client_col2:
-        st.html(f"<strong>Resumes</strong>: {selected_client['Resumes']}")
         st.html(f"<strong>Hired</strong>: {selected_client['First Hire Achieved']}")
+        st.html(f"<strong>Months In</strong>: {selected_client['Months In']}")
+        st.html(f"<strong>Onboarding Stage</strong>: {selected_client['Stage']}")
+        
+    with client_col2:
+        st.html(f"<strong>Users</strong>: {selected_client['Users']}")
+        st.html(f"<strong>Resumes</strong>: {int(selected_client['Resumes']):,}")
         st.html(f"<strong>Hires</strong>: {selected_client['Hires']}")
         
-
     with client_col3:
         fee = selected_client["Monthly Fee"]
         fee_unit = "£" if selected_client["Region"] == "UK" else "$"
@@ -130,8 +129,6 @@ if not filtered_df.empty:
         st.html(f"<strong>Account Manager</strong>: {selected_client['Account Manager']}")
         st.html(f"<strong>Region</strong>: {selected_client['Region']}")
 
-
-    
     onboard_col1, onboard_col2, onboard_col3 = st.columns(3)
     onboard_col4, onboard_col5, onboard_col6 = st.columns(3)
 

@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from utils.db import load_clients_to_review, load_monthly_usage
+from utils.db import load_clients_to_review, load_monthly_usage, load_child_accounts, load_parent_ids
 from utils.data_prep import prepare_time_series
 from utils.display import colour_health_band
 
@@ -32,6 +32,8 @@ with global_col4:
 
 
 with st.expander("🔎 Filters"):
+    parent_only = st.checkbox("Show parent accounts only")
+
     health_filter = st.multiselect(
         "Health Band",
         options=sorted(df["health_band"].unique()),
@@ -56,12 +58,17 @@ with st.expander("🔎 Filters"):
         default=sorted(df["region"].unique())
     )
 
+parent_ids = load_parent_ids()
+
 filtered_df = df[
     (df["health_band"].isin(health_filter)) &
     (df["company_size"].isin(size_filter)) &
     (df["salesperson"].isin(salesperson_filter)) &
     (df["region"].isin(region_filter))
 ]
+
+if parent_only:
+    filtered_df = filtered_df[filtered_df['team_id'].isin(parent_ids)]
 
 filtered_critical_clients = filtered_df[filtered_df["health_band"] == "Critical"]
 filtered_at_risk_clients = filtered_df[filtered_df["health_band"] == "At Risk"]
@@ -241,6 +248,21 @@ if not filtered_df.empty:
     table_df["Days to Contract End Date"] = table_df["Days to Contract End Date"].apply(
         lambda x: f"{x:,.0f}" if pd.notna(x) else "Unknown"
         )
+
+    if selected_client['is_child_account'] == 0 and selected_team_id in parent_ids:
+        child_df = load_child_accounts(selected_team_id)
+        if not child_df.empty:
+            with st.expander(f"👥 Child Accounts ({len(child_df)})"):
+                child_df = child_df.rename(columns={
+                    'company_name': 'Company',
+                    'active_users': 'Users',
+                    'total_clicks_wo_api': 'Clicks',
+                    'monthly_fee': 'Monthly Fee',
+                    'overall_health_score': 'Health Score',
+                    'health_band': 'Health Band'
+                })
+                styled_children = child_df.drop(columns=['Monthly Fee']).style.apply(colour_health_band, axis=1)
+                st.dataframe(styled_children, hide_index=True, width='stretch')
 
     styled_table = table_df.style.apply(colour_health_band, axis=1)
 
