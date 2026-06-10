@@ -6,7 +6,7 @@ from utils.data_prep import prepare_time_series
 from utils.display import colour_health_band
 
 st.set_page_config(layout="wide")
-st.title("Clients to Review")
+st.title("Client Review")
 st.caption("Health scores are a starting point for investigation, not a definitive assessment. Always apply account context before drawing conclusions.")
 
 df = load_clients_to_review()
@@ -112,25 +112,23 @@ if not filtered_df.empty:
 
     with client_col1:
         if selected_client['is_child_account'] == 1:
-            st.markdown(f"Monthly fee: Child account - fee included in {selected_client['parent_company_name']}")
+            st.html(f"<strong>Monthly fee</strong>: Child account - fee included in {selected_client['parent_company_name']}")
         else:
             fee = selected_client["monthly_fee"]
             fee_unit = "£" if selected_client["region"] == "UK" else "$"
             fee_display = "Unknown" if pd.isna(fee) else f"{fee_unit}{int(fee):,}"
-            st.markdown(f"Monthly fee: {fee_display}")
-
-
-        st.markdown(f"Users: {usage_df['active_users'].iloc[-1]}")
-        st.markdown(f"Risk: {selected_client["risk_flag"]}")
-        st.markdown(f"Health Score: {selected_client["overall_health_score"]}")
+            st.html(f"<strong>Monthly fee</strong>: {fee_display}")
+        st.html(f"<strong>Users</strong>: {usage_df['active_users'].iloc[-1]}")
+        st.html(f"<strong>Risk</strong>: {selected_client["risk_flag"]}")
+        st.html(f"<strong>Health Score</strong>: {selected_client["overall_health_score"]}")
 
     with client_col2:
-        st.markdown(f"Account Manager: {selected_client["salesperson"]}")
-        st.markdown(f"Region: {selected_client["region"]}")
+        st.html(f"<strong>Account Manager</strong>: {selected_client["salesperson"]}")
+        st.html(f"<strong>Region</strong>: {selected_client["region"]}")
         days_left = selected_client["days_to_contract_end"]
         days_display = "Unknown. Please check" if pd.isna(days_left) else int(days_left)
-        st.markdown(f"Contract Days left: {days_display}")
-        st.markdown(f"Company Size: {selected_client["company_size"].capitalize()}")
+        st.html(f"<strong>Contract Days left</strong>: {days_display}")
+        st.html(f"<strong>Company Size</strong>: {selected_client["company_size"].capitalize()}")
 
     
     chart_col1, chart_col2 = st.columns(2)
