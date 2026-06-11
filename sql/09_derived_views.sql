@@ -275,10 +275,17 @@ SELECT
 	c.account_team_id,
 	ls.company_name,
 	ls.region,
-	ls.company_size,
+	CASE
+		WHEN c.total_users BETWEEN 1 AND 9 THEN 'micro'
+		WHEN c.total_users BETWEEN 10 AND 49 THEN 'small'
+		WHEN c.total_users BETWEEN 50 AND 250 THEN 'medium'
+		WHEN c.total_users >=250 THEN 'large'
+		ELSE 'unknown'
+	END AS company_size,
 	c.total_users,
 	c.monthly_fee,
-	ROUND(c.monthly_fee * 1.0 / NULLIF(c.total_users, 0), 2) AS fee_per_user
+	ROUND(c.monthly_fee * 1.0 / NULLIF(c.total_users, 0), 2) AS fee_per_user,
+	ls.salesperson
 FROM consolidated c
 LEFT JOIN latest_snapshot ls 
 	ON c.account_team_id = ls.team_id

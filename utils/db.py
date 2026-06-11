@@ -271,3 +271,26 @@ def load_child_accounts(parent_team_id):
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn, params=(parent_team_id,))
+    
+
+def load_pricing_audit():
+    query = """
+        SELECT
+            c.account_team_id,
+            c.company_name,
+            c.region,
+            c.company_size,
+            c.total_users,
+            c.monthly_fee,
+            c.fee_per_user,
+            c.salesperson
+        FROM consolidated_fee_per_user c
+        WHERE c.fee_per_user > 0
+        AND c.account_team_id NOT IN (
+            SELECT team_id FROM company_overview
+            WHERE client_stage = 'Onboarding'
+        )
+        ORDER BY c.salesperson ASC, c.fee_per_user DESC
+    """
+    with get_connection() as conn:
+        return pd.read_sql(query, conn)
