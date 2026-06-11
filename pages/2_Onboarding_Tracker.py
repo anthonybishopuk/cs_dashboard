@@ -172,7 +172,7 @@ if not filtered_df.empty:
             title="Resumes Added",
             labels={
                 "snapshot_month": "Month",
-                "resumes_added": "Resumes Added"
+                "resumes_added": "Resumes"
             }
         )
         fig.update_xaxes(dtick="M1", tickformat="%b %Y")
@@ -220,7 +220,7 @@ if not filtered_df.empty:
             title="Hires (in past year)",
             labels={
                 "snapshot_month": "Month",
-                "hires_in_past_year": "Hires in past year"
+                "hires_in_past_year": "Hires"
             }
         )
         fig.update_xaxes(dtick="M1", tickformat="%b %Y")

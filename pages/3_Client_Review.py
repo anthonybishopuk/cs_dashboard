@@ -207,6 +207,7 @@ if not filtered_df.empty:
         st.plotly_chart(fig, width="stretch")
 
     display_cols = [
+        "team_id",
         "company_name",
         "health_band",
         "overall_health_score",
@@ -214,7 +215,6 @@ if not filtered_df.empty:
         "salesperson", 
         "monthly_fee",
         "company_size",
-        "contract_status", 
         "days_to_contract_end", 
         "is_child_account", 
         "parent_company_name",
@@ -224,6 +224,7 @@ if not filtered_df.empty:
     table_df["is_child_account"] = table_df["is_child_account"].map({1: 'Yes', 0: ''})
     table_df["parent_company_name"] = table_df["parent_company_name"].fillna("")
     table_df.rename(columns={
+        "team_id": "Team ID",
         "company_name": "Company",
         "salesperson": "Account Manager",
         "company_size": "Company Size",
@@ -232,10 +233,9 @@ if not filtered_df.empty:
         "overall_health_score": "Health Score",
         "health_band": "Health Band",
         "recommended_action": "Recommended Action", 
-        "contract_status": "Contract Status", 
         "days_to_contract_end": "Days to Contract End Date",
-        "is_child_account": "Child Account",
-        "parent_company_name": "Parent Company"
+        "is_child_account": "Child",
+        "parent_company_name": "Parent"
         }, inplace=True)
     
     table_df["Monthly Fee"] = [
@@ -254,6 +254,7 @@ if not filtered_df.empty:
         if not child_df.empty:
             with st.expander(f"👥 Child Accounts ({len(child_df)})"):
                 child_df = child_df.rename(columns={
+                    'team_id': 'Team ID',
                     'company_name': 'Company',
                     'active_users': 'Users',
                     'total_clicks_wo_api': 'Clicks',
