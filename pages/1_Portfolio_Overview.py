@@ -3,8 +3,11 @@ import plotly.express as px
 import pandas as pd
 from utils.db import load_portfolio_summary, load_churn_data, load_scatter_data, load_mrr_history
 from utils.data_prep import calculate_churn_summary, prepare_churn_chart_data, calculate_nrr_grr
+ 
+st.set_page_config(
+    page_title="Portfolio Overview",
+    layout="wide")
 
-st.set_page_config(layout="wide")
 st.title("Portfolio Overview")
 
 df = load_portfolio_summary()

@@ -4,7 +4,10 @@ import pandas as pd
 from utils.db import load_list_onboarding_clients, load_monthly_usage
 from utils.data_prep import prepare_time_series
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="Onboarding Tracker",
+    layout="wide")
+
 st.title("Onboarding Tracker")
 
 df = load_list_onboarding_clients()

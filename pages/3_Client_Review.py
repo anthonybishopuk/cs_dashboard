@@ -5,7 +5,10 @@ from utils.db import load_clients_to_review, load_monthly_usage, load_child_acco
 from utils.data_prep import prepare_time_series
 from utils.display import colour_health_band
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="Client Review",
+    layout="wide")
+
 st.title("Client Review")
 st.caption("Health scores are a starting point for investigation, not a definitive assessment. Always apply account context before drawing conclusions.")
 
@@ -95,7 +98,7 @@ if not filtered_df.empty:
 
     selected_company = st.selectbox(
         "Select a company",
-        filtered_df["company_name"].sort_values()
+        filtered_df["company_name"].sort_values(key=lambda col: col.str.lower())
     )
 
     selected_team_id = int(filtered_df.loc[
