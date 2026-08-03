@@ -104,8 +104,10 @@ if not filtered_df.empty:
 
     progress_df = load_monthly_usage(selected_team_id)
     progress_df = prepare_time_series(progress_df)
+    progress_df['total_clicks_wo_api'] = pd.to_numeric(progress_df['total_clicks_wo_api'], errors='coerce')
+    progress_df['active_users'] = pd.to_numeric(progress_df['active_users'], errors='coerce')
     progress_df['clicks_per_user'] = (
-        progress_df['total_clicks_wo_api'] / progress_df['active_users'].replace(0, pd.NA)
+        progress_df['total_clicks_wo_api'] / progress_df['active_users'].replace(0, float('nan'))
     ).round(2)
     
     st.divider()
@@ -184,20 +186,26 @@ if not filtered_df.empty:
         st.plotly_chart(fig, width="stretch")
     
     with onboard_col4:
-        fig = px.bar(
-            progress_df.reset_index().iloc[1:],
-            x="snapshot_month",
-            y="jobs_posted",
-            title="Jobs Posted",
-            labels={
-                "snapshot_month": "Month",
-                "jobs_posted": "Jobs"
-            }
-        )
-        fig.update_xaxes(dtick="M1", tickformat="%b %Y")
-        fig.update_yaxes(rangemode="tozero")
-        fig.update_layout(bargap=0.1)
-        st.plotly_chart(fig, width="stretch")
+        jobs_df = progress_df.reset_index().iloc[1:]
+        if not jobs_df.empty:
+            fig = px.bar(
+                jobs_df,
+                x="snapshot_month",
+                y="jobs_posted",
+                title="Jobs Posted",
+                labels={
+                    "snapshot_month": "Month",
+                    "jobs_posted": "Jobs"
+                }
+            )
+            fig.update_xaxes(dtick="M1", tickformat="%b %Y")
+            fig.update_yaxes(rangemode="tozero")
+            fig.update_layout(bargap=0.1)
+            st.plotly_chart(fig, width="stretch")
+        else:
+            st.html("<p></p>")
+            st.html("<strong>Jobs Posted</strong>")
+            st.caption("Not enough data yet.")
 
     with onboard_col5:
         fig = px.bar(

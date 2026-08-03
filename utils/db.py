@@ -278,6 +278,7 @@ def load_pricing_audit():
         SELECT
             c.account_team_id,
             c.company_name,
+            CASE WHEN pca.parent_team_id IS NOT NULL THEN 'Y' ELSE '' END AS parent_account,
             c.region,
             c.company_size,
             c.total_users,
@@ -285,6 +286,8 @@ def load_pricing_audit():
             c.fee_per_user,
             c.salesperson
         FROM consolidated_fee_per_user c
+        LEFT JOIN (SELECT DISTINCT parent_team_id FROM parent_child_accounts) pca
+            ON c.account_team_id = pca.parent_team_id
         WHERE c.fee_per_user > 0
         AND c.account_team_id NOT IN (
             SELECT team_id FROM company_overview
