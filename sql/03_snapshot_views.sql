@@ -8,8 +8,9 @@ SELECT *,
 	CASE 
 		WHEN active_users BETWEEN 1 and 9 THEN 'micro'
 		WHEN active_users BETWEEN 10 and 49 THEN 'small'
-		WHEN active_users BETWEEN 50 and 250 THEN 'medium'
-		WHEN active_users >= 250 THEN 'large'
+		WHEN active_users BETWEEN 50 and 249 THEN 'medium'
+		WHEN active_users BETWEEN 250 and 499 THEN 'large'
+        WHEN active_users >= 500 THEN 'enterprise'
 		ELSE 'unknown'
 	END AS company_size
 FROM clients_clean cc 

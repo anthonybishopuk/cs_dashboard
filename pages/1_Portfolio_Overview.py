@@ -181,14 +181,16 @@ st.divider()
 
 st.header('Client Pricing')
 scatter_df = load_scatter_data()
-small_df = scatter_df[scatter_df['company_size'].isin(['micro', 'small'])]
-large_df = scatter_df[scatter_df['company_size'].isin(['medium', 'large'])]
+micro_df = scatter_df[scatter_df['company_size'] == 'micro']
+small_df = scatter_df[scatter_df['company_size'] == 'small']
+medium_df = scatter_df[scatter_df['company_size'] == 'medium']
+large_enterprise_df = scatter_df[scatter_df['company_size'].isin(['large', 'enterprise'])]
 
 scatter_col1, scatter_col2 = st.columns(2)
 
 with scatter_col1:
     scatter_fig = px.scatter(
-        small_df,
+        micro_df,
         x='total_users',
         y='fee_per_user',
         color='region',
@@ -197,7 +199,7 @@ with scatter_col1:
             'UK': 'red',
             'US': 'blue'
         },
-        title='Micro & Small companies - Fee per User',
+        title='Micro companies - Fee per User',
         labels={
             'total_users': 'Active Users',
             'fee_per_user': 'Fee per User',
@@ -210,7 +212,7 @@ with scatter_col1:
 
 with scatter_col2:
     scatter_fig = px.scatter(
-        large_df,
+        small_df,
         x='total_users',
         y='fee_per_user',
         color='region',
@@ -219,7 +221,51 @@ with scatter_col2:
             'UK': 'red',
             'US': 'blue'
         },
-        title='Medium & Large companies - Fee per User',
+        title='Small companies - Fee per User',
+        labels={
+            'total_users': 'Active Users',
+            'fee_per_user': 'Fee per User',
+            'region': 'Region'
+        }
+    )
+    scatter_fig.update_yaxes(rangemode="tozero")
+    st.plotly_chart(scatter_fig, width='stretch')
+
+
+scatter_col3, scatter_col4 = st.columns(2)
+with scatter_col3:
+    scatter_fig = px.scatter(
+        medium_df,
+        x='total_users',
+        y='fee_per_user',
+        color='region',
+        hover_name='company_name',
+        color_discrete_map={
+            'UK': 'red',
+            'US': 'blue'
+        },
+        title='Medium companies - Fee per User',
+        labels={
+            'total_users': 'Active Users',
+            'fee_per_user': 'Fee per User',
+            'region': 'Region'
+        }
+    )
+    scatter_fig.update_yaxes(rangemode="tozero")
+    st.plotly_chart(scatter_fig, width='stretch')
+
+with scatter_col4:
+    scatter_fig = px.scatter(
+        large_enterprise_df,
+        x='total_users',
+        y='fee_per_user',
+        color='region',
+        hover_name='company_name',
+        color_discrete_map={
+            'UK': 'red',
+            'US': 'blue'
+        },
+        title='Large and Enterprise companies - Fee per User',
         labels={
             'total_users': 'Active Users',
             'fee_per_user': 'Fee per User',

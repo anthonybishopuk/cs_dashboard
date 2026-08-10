@@ -10,8 +10,11 @@ df = load_pricing_audit()
 
 overpaying = df[df['fee_per_user'] > 150].copy()
 underpaying = df[
-    ((df['company_size'].isin(['micro', 'small'])) & (df['fee_per_user'] < 50)) |
-    ((df['company_size'].isin(['medium', 'large'])) & (df['fee_per_user'] < 30))
+    ((df['company_size'] == 'micro') & (df['fee_per_user'] < 70)) |
+    ((df['company_size'] == 'small') & (df['fee_per_user'] < 50)) |
+    ((df['company_size'] == 'medium') & (df['fee_per_user'] < 40)) |
+    ((df['company_size'] == 'large') & (df['fee_per_user'] < 25)) |
+    ((df['company_size'] == 'enterprise') & (df['fee_per_user'] < 10))
 ].copy()
 
 with pd.ExcelWriter('data/pricing_audit.xlsx', engine='openpyxl') as writer:

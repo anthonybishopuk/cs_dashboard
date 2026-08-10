@@ -279,7 +279,8 @@ SELECT
 		WHEN c.total_users BETWEEN 1 AND 9 THEN 'micro'
 		WHEN c.total_users BETWEEN 10 AND 49 THEN 'small'
 		WHEN c.total_users BETWEEN 50 AND 250 THEN 'medium'
-		WHEN c.total_users >=250 THEN 'large'
+		WHEN c.total_users BETWEEN 250 AND 499 THEN 'large'
+        WHEN c.total_users >= 500 THEN 'enterprise'
 		ELSE 'unknown'
 	END AS company_size,
 	c.total_users,
@@ -313,8 +314,9 @@ SELECT
 	CASE
 		WHEN c.total_users BETWEEN 1 AND 9 THEN 'micro'
 		WHEN c.total_users BETWEEN 10 AND 49 THEN 'small'
-		WHEN c.total_users BETWEEN 50 AND 250 THEN 'medium'
-		WHEN c.total_users >=250 THEN 'large'
+		WHEN c.total_users BETWEEN 50 AND 249 THEN 'medium'
+		WHEN c.total_users BETWEEN 250 AND 499 THEN 'large'
+		WHEN c.total_users >= 500 THEN 'enterprise'
 		ELSE 'unknown'
 	END AS company_size,
 	c.total_users,
