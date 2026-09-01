@@ -99,7 +99,13 @@ def load_clients_to_review():
             arna.company_name,
             arna.team_id,
             arna.region,
-            arna.salesperson,
+            CASE
+                WHEN arna.salesperson IS NULL 
+                    OR arna.salesperson = '' 
+                    OR arna.salesperson = 'Unassigned'
+                        THEN ls.salesperson
+                ELSE arna.salesperson
+            END AS salesperson,
             arna.overall_health_score,
             arna.health_band,
             arna.health_narrative,
@@ -121,6 +127,8 @@ def load_clients_to_review():
         FROM at_risk_next_actions arna
         LEFT JOIN parent_child_accounts pca
             ON arna.team_id = pca.child_team_id
+        LEFT JOIN latest_snapshot ls
+            ON pca.parent_team_id = ls.team_id
     """
     with get_connection() as conn:
         return pd.read_sql(query, conn)

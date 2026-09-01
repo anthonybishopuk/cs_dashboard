@@ -195,15 +195,22 @@ with scatter_col1:
         y='fee_per_user',
         color='region',
         hover_name='company_name',
+        hover_data={
+            'fee_per_user': ':.2f', 
+            'salesperson': True, 
+            'total_users': True, 
+            'region': True
+        },
         color_discrete_map={
             'UK': 'red',
             'US': 'blue'
         },
         title='Micro companies - Fee per User',
         labels={
-            'total_users': 'Active Users',
-            'fee_per_user': 'Fee per User',
-            'region': 'Region'
+            'salesperson': 'Salesperson ',
+            'total_users': 'Active Users ',
+            'fee_per_user': 'Fee per User ',
+            'region': 'Region '
         }
     )
     scatter_fig.update_yaxes(rangemode="tozero")
@@ -217,15 +224,22 @@ with scatter_col2:
         y='fee_per_user',
         color='region',
         hover_name='company_name',
+        hover_data={
+            'fee_per_user': ':.2f', 
+            'salesperson': True, 
+            'total_users': True, 
+            'region': True
+        },
         color_discrete_map={
             'UK': 'red',
             'US': 'blue'
         },
         title='Small companies - Fee per User',
         labels={
-            'total_users': 'Active Users',
-            'fee_per_user': 'Fee per User',
-            'region': 'Region'
+            'salesperson': 'Salesperson ',
+            'total_users': 'Active Users ',
+            'fee_per_user': 'Fee per User ',
+            'region': 'Region '
         }
     )
     scatter_fig.update_yaxes(rangemode="tozero")
@@ -240,15 +254,22 @@ with scatter_col3:
         y='fee_per_user',
         color='region',
         hover_name='company_name',
+        hover_data={
+            'fee_per_user': ':.2f', 
+            'salesperson': True, 
+            'total_users': True, 
+            'region': True
+        },
         color_discrete_map={
             'UK': 'red',
             'US': 'blue'
         },
         title='Medium companies - Fee per User',
         labels={
-            'total_users': 'Active Users',
-            'fee_per_user': 'Fee per User',
-            'region': 'Region'
+            'salesperson': 'Salesperson ',
+            'total_users': 'Active Users ',
+            'fee_per_user': 'Fee per User ',
+            'region': 'Region '
         }
     )
     scatter_fig.update_yaxes(rangemode="tozero")
@@ -261,15 +282,22 @@ with scatter_col4:
         y='fee_per_user',
         color='region',
         hover_name='company_name',
+        hover_data={
+            'fee_per_user': ':.2f', 
+            'salesperson': True, 
+            'total_users': True, 
+            'region': True
+        },
         color_discrete_map={
             'UK': 'red',
             'US': 'blue'
         },
         title='Large and Enterprise companies - Fee per User',
         labels={
-            'total_users': 'Active Users',
-            'fee_per_user': 'Fee per User',
-            'region': 'Region'
+            'salesperson': 'Salesperson ',
+            'total_users': 'Active Users ',
+            'fee_per_user': 'Fee per User ',
+            'region': 'Region '
         }
     )
     scatter_fig.update_yaxes(rangemode="tozero")
