@@ -3,7 +3,7 @@ import plotly.express as px
 import pandas as pd
 from utils.db import load_clients_to_review, load_monthly_usage, load_child_accounts, load_parent_ids
 from utils.data_prep import prepare_time_series
-from utils.display import colour_health_band
+from utils.display import colour_health_band, format_days
 
 st.set_page_config(
     page_title="Client Review",
@@ -14,6 +14,11 @@ st.caption("Health scores are a starting point for investigation, not a definiti
 
 df = load_clients_to_review()
 df['salesperson'] = df['salesperson'].fillna('Unassigned')
+df['days_to_contract_end'] = df['days_to_contract_end'].apply(format_days)
+df['company_name'] = df.apply(
+    lambda row: f"{row['company_name']} (C)" if row['is_child_account'] == 1 else row['company_name'],
+    axis=1
+)
 
 critical_clients = df[df["health_band"] == "Critical"]
 at_risk_clients = df[df["health_band"] == "At Risk"]
@@ -97,23 +102,18 @@ with filtered_col4:
 if not filtered_df.empty:
     st.subheader("📈 Client Detail View")
 
-    filtered_df['display_name'] = filtered_df.apply(
-        lambda row: f"{row['company_name']} (C)" if row['is_child_account'] == 1 else row['company_name'],
-        axis=1
-    )
-
     selected_company = st.selectbox(
         "Select a company. (C) indicates a Child company",
-        filtered_df["display_name"].sort_values(key=lambda col: col.str.lower())
+        filtered_df["company_name"].sort_values(key=lambda col: col.str.lower())
     )
 
     selected_team_id = int(filtered_df.loc[
-        filtered_df["display_name"] == selected_company,
+        filtered_df["company_name"] == selected_company,
         "team_id"
         ].iloc[0])
 
     selected_client = filtered_df[
-        filtered_df["display_name"] == selected_company
+        filtered_df["company_name"] == selected_company
         ].iloc[0]
 
     usage_df = load_monthly_usage(selected_team_id)
@@ -142,7 +142,7 @@ if not filtered_df.empty:
         st.html(f"<strong>Account Manager</strong>: {selected_client["salesperson"]}")
         st.html(f"<strong>Region</strong>: {selected_client["region"]}")
         days_left = selected_client["days_to_contract_end"]
-        days_display = "Unknown. Please check" if pd.isna(days_left) else int(days_left)
+        days_display = "Unknown. Please check" if pd.isna(days_left) else (days_left)
         st.html(f"<strong>Contract Days left</strong>: {days_display}")
         st.html(f"<strong>Company Size</strong>: {selected_client["company_size"].capitalize()}")
 
@@ -224,13 +224,11 @@ if not filtered_df.empty:
         "salesperson", 
         "monthly_fee",
         "company_size",
-        "days_to_contract_end", 
-        "is_child_account", 
+        "days_to_contract_end",
         "parent_company_name",
         "region"
     ]
     table_df = filtered_df[display_cols].sort_values("overall_health_score")
-    table_df["is_child_account"] = table_df["is_child_account"].map({1: 'Yes', 0: ''})
     table_df["parent_company_name"] = table_df["parent_company_name"].fillna("")
     table_df.rename(columns={
         "team_id": "Team ID",
@@ -243,20 +241,16 @@ if not filtered_df.empty:
         "health_band": "Health Band",
         "recommended_action": "Recommended Action", 
         "days_to_contract_end": "Days to Contract End Date",
-        "is_child_account": "Child",
         "parent_company_name": "Parent"
         }, inplace=True)
     
     table_df["Monthly Fee"] = [
-        "Child account" if x == "Yes"
+        "See parent account" if pd.notna(p) and p != ""
         else f"£{x:,.2f}" if r == "UK"
-        else f"${x:,.2f}" if pd.notna(x) 
-        else "Unknown"
-        for x, r in zip(table_df["Monthly Fee"], table_df["Region"])
+        else f"${x:,.2f}" if pd.notna(x) and x > 0
+        else "N/A — please check"
+        for x, r, p in zip(table_df["Monthly Fee"], table_df["Region"], table_df["Parent"])
     ]
-    table_df["Days to Contract End Date"] = table_df["Days to Contract End Date"].apply(
-        lambda x: f"{x:,.0f}" if pd.notna(x) else "Unknown"
-        )
 
     if selected_client['is_child_account'] == 0 and selected_team_id in parent_ids:
         child_df = load_child_accounts(selected_team_id)

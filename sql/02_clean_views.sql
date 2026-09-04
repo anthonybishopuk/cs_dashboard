@@ -4,32 +4,34 @@ DROP VIEW IF EXISTS clients_clean;
 
 CREATE VIEW clients_clean AS
 SELECT
-	company_name,
-	team_id,
-	is_test,
-	region,
-	snapshot_month,
-	source_file,
-	load_date,
-	total_clicks,
-	total_clicks_wo_api,
-	non_jobs_clicks,
-	view_candidates,
-	active_coddlers,
-	CAST(REPLACE(monthly_fee, ',', '') AS REAL) AS monthly_fee,
-	monthly_fee_currency,
-	number_candidate_emails,
-	number_contact_emails,
-	salesperson,
-	substr(latest_contract_end_date, 7, 4) || '-' ||
-	substr(latest_contract_end_date, 1, 2) || '-' ||
-	substr(latest_contract_end_date, 4, 2) AS latest_contract_end_date,
-	active_harvester_accounts,
-	active_users,
-	total_resumes,
-	total_jobs,
-	hires_in_past_year
+	COALESCE(cno.override_name, cr.company_name) AS	company_name,
+	cr.team_id,
+	cr.is_test,
+	cr.region,
+	cr.snapshot_month,
+	cr.source_file,
+	cr.load_date,
+	cr.total_clicks,
+	cr.total_clicks_wo_api,
+	cr.non_jobs_clicks,
+	cr.view_candidates,
+	cr.active_coddlers,
+	CAST(REPLACE(cr.monthly_fee, ',', '') AS REAL) AS monthly_fee,
+	cr.monthly_fee_currency,
+	cr.number_candidate_emails,
+	cr.number_contact_emails,
+	cr.salesperson,
+	substr(cr.latest_contract_end_date, 7, 4) || '-' ||
+	substr(cr.latest_contract_end_date, 1, 2) || '-' ||
+	substr(cr.latest_contract_end_date, 4, 2) AS latest_contract_end_date,
+	cr.active_harvester_accounts,
+	cr.active_users,
+	cr.total_resumes,
+	cr.total_jobs,
+	cr.hires_in_past_year
 FROM clients_raw cr
+LEFT JOIN company_name_overrides cno 
+	ON cr.team_id = cno.team_id
 WHERE is_test IS NOT TRUE
 AND LOWER (cr.company_name) NOT LIKE '%test%'
 AND LOWER (cr.company_name) NOT LIKE '%demo%'

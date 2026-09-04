@@ -50,3 +50,14 @@ CREATE TABLE IF NOT EXISTS parent_child_accounts (
 	added_by TEXT,
 	added_date TEXT
 );
+
+
+-- Changed Company name
+CREATE TABLE IF NOT EXISTS company_name_overrides (
+	team_id INT PRIMARY KEY,
+	original_name TEXT,
+	override_name TEXT,
+	reason TEXT,
+	updated_by TEXT,
+	updated_date TEXT
+);
