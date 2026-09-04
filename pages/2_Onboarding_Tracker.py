@@ -61,8 +61,8 @@ onboard_df = onboard_df.rename(columns={
 with st.expander("🔎 Filters"):
     stage_filter = st.multiselect(
         'Stage',
-        options=sorted(onboard_df['Stage'].unique()),
-        default=sorted(onboard_df['Stage'].unique())
+        options=['Month 0–1', 'Month 1–3', 'Month 3–6'],
+        default=['Month 0–1', 'Month 1–3', 'Month 3–6']
     )
 
     salesperson_filter = st.multiselect(

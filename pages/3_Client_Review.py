@@ -13,6 +13,7 @@ st.title("Client Review")
 st.caption("Health scores are a starting point for investigation, not a definitive assessment. Always apply account context before drawing conclusions.")
 
 df = load_clients_to_review()
+df['salesperson'] = df['salesperson'].fillna('Unassigned')
 
 critical_clients = df[df["health_band"] == "Critical"]
 at_risk_clients = df[df["health_band"] == "At Risk"]
@@ -38,9 +39,9 @@ with st.expander("🔎 Filters"):
     parent_only = st.checkbox("Show parent accounts only")
 
     health_filter = st.multiselect(
-        "Health Band",
-        options=sorted(df["health_band"].unique()),
-        default=sorted(df["health_band"].unique())
+    "Health Band",
+        options=["Critical", "At Risk", "Watch", "Healthy"],
+        default=["Critical", "At Risk", "Watch", "Healthy"]
     )
     
     size_filter = st.multiselect(
@@ -96,18 +97,23 @@ with filtered_col4:
 if not filtered_df.empty:
     st.subheader("📈 Client Detail View")
 
+    filtered_df['display_name'] = filtered_df.apply(
+        lambda row: f"{row['company_name']} (C)" if row['is_child_account'] == 1 else row['company_name'],
+        axis=1
+    )
+
     selected_company = st.selectbox(
-        "Select a company",
-        filtered_df["company_name"].sort_values(key=lambda col: col.str.lower())
+        "Select a company. (C) indicates a Child company",
+        filtered_df["display_name"].sort_values(key=lambda col: col.str.lower())
     )
 
     selected_team_id = int(filtered_df.loc[
-        filtered_df["company_name"] == selected_company,
+        filtered_df["display_name"] == selected_company,
         "team_id"
         ].iloc[0])
 
     selected_client = filtered_df[
-        filtered_df["company_name"] == selected_company
+        filtered_df["display_name"] == selected_company
         ].iloc[0]
 
     usage_df = load_monthly_usage(selected_team_id)
@@ -155,7 +161,7 @@ if not filtered_df.empty:
         )
         fig.update_xaxes(dtick="M1", tickformat="%b %Y")
         fig.update_yaxes(rangemode="tozero")
-        fig.update_layout(bargap=0.1)
+        fig.update_layout(bargap=0.1, yaxis_range=[0, 105])
         st.plotly_chart(fig, width="stretch") 
 
 
